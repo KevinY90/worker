@@ -1,0 +1,16 @@
+redis:
+  host: 127.0.0.1
+  port: 6379
+  db: 0
+  expire: 500
+  password: ""
+  socket_timeout: 
+database:
+  uri: ""
+email:
+  worker_email: ""
+  password: ""
+  smtp_server: ""
+  port: 587
+task_queues: []
+notification_queues: []

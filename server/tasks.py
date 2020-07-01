@@ -1,49 +1,81 @@
 import time
 import sys
+import json
+import pickle
 from threading import Thread, Timer
-from http_api import Request
+from .request_generator import Request
+from .functions import create_parser
 
 
-class TaskFactory:
-    def __init__(self, connection, completed_job_queue, redis_conn):
-        self.cursor = connection
-        self.destination_queue = completed_job_queue
-        self.redis_conn = redis_conn
-    
-    def create_task(self, task_data, connection):
-        pass
+class TaskCreator:
+    def __init__(self, container, queue, db_queue):
+        self.container = container
+        self.queue = queue
+        self.mem = {}
+        self.db_queue = db_queue
 
-    def run_on_task_end(self, destination):
-        queue = self.redis_conn
-        destination = self.destination_queue
-        def send_to_notification_queue(*args, **kwargs):
-            # add to notification queue 
-            # get task data from args / kwargs
-            # if send_notification is true in kwargs
-            # send this task to notifications queue
-        return send_to_notification_queue
+    def create_task(self, task_data):
+        task_data = json.loads(task_data)
+        parse_fn = None
+        url_data = task_data['url_obj']
+        if url_data.get('fields'):
+            targeted_fields = url_data['fields']
+            if self.mem.get(targeted_fields):
+                parse_fn = self.mem[targeted_fields]
+            else:
+                parse_fn = create_parser(targeted_fields)
+                self.mem[targeted_fields] = parse_fn
+        req = Request(
+            url_data['url'],
+            url_data['params'], 
+            url_data['headers'],
+            )
+        rwc = self.run_when_complete()
+        self.container.append(PollEndpoint(task_data, req, parse_fn, rwc))
+
+    def run_when_complete(self):
+        task_queue = self.queue            
+        db_queue = self.db_queue
+
+        def process_completed_task(task_data):
+            should_notify = task_data.get('notify')
+            interval = task_data['task_obj']['interval']
+            complete = task_data['task_obj']['completed']
+            if should_notify:
+                notification = pickle.dumps({
+                    'user': task_data['user_obj']['email'],
+                    'data': task_data['notify'],
+                    'type': task_data['task_obj']['notification_type'],
+                    'task_message': task_data['task_obj']['notification_message'],
+                })
+                task_queue.rpush('notifications', notification)
+            if complete == False:
+                if task_data.get('notify'):
+                    del task_data['notify']            
+            db_queue.append((task_data['task_obj']['id'], should_notify, task_queue, task_data, interval))
+        return process_completed_task
 
 
 class Task:
     def __init__(self, task_data, run_when_complete):
         self.task_data = task_data
-        self.is_notification_required = run_when_complete
+        self.process_completed_task = run_when_complete
     
     def __del__(self):
-        self.is_notification_required(self.task_data)
-    
+        self.process_completed_task(self.task_data)
 
-class PollApi(Task):
-    def __init__(self, task_data, cache_conn, req, parse_fn):
-        super().__init__(task_data)
+class PollEndpoint(Task):
+    def __init__(self, task_data, req, parse_fn, on_complete):
+        super().__init__(task_data, on_complete)
         self.req = req
         self.parse = parse_fn
-        self.store = cache_conn
 
-    def analyze_response(self):
-        res = self.req.make_get_request()
-        self.task_data.notify = self.parse(res)
-
-    def cache_results(self):
-        # write to redis cache 
-
+    def analyze_response(self, response):
+        if response.status_code == 200 or response.status_code == 201:
+            response = json.loads(response.text)
+            notifications = self.parse(response)
+            self.task_data['notify'] = notifications if notifications else None
+            
+    def start(self):
+        response = self.req.make_get_request()
+        self.analyze_response(response)

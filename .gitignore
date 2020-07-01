@@ -3,4 +3,5 @@ include
 lib
 .Python
 __pycache__/
-defaults*
+settings.yml
+

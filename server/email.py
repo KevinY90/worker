@@ -7,11 +7,13 @@ class EmailGenerator:
     def configure(self, options):
         for k, v in options.items():
             setattr(self, k, v)
-        print(self.smtp_server, self.worker_email, self.port, self.password)
 
     def send_email(self, message, destination):
-        print('Generate Email')
         smtp_serv, port, context = self.smtp_server, self.port, ssl.create_default_context()
-        with smtplib.SMTP_SSL(smtp_serv, port, context) as server_conn:
-            server_conn.login(self.worker_email, self.password)
-            server.sendmail(self.sender.email, destination, message)
+        with smtplib.SMTP(smtp_serv, port) as email_server:
+            email_server.ehlo()
+            email_server.starttls(context=context)
+            email_server.ehlo()
+            email_server.login(self.worker_email, self.password)
+            email_server.sendmail(self.worker_email, destination, message)
+

@@ -1,18 +1,15 @@
 import redis
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.orm import sessionmaker, mapper
 from collections import defaultdict
-
 
 
 class Redis:
     def __init__(self, options):
-        for k,v in options.items():
-            print(k, v)
         self.connection = self.create_connection(options)
     
     def create_connection(self, options):
-        return redis.StrictRedis(
+        return redis.Redis(
             host=options['host'],
             port=options['port'],
             db=options['db'],
@@ -29,10 +26,17 @@ class Redis:
 
 class DBConnection:
     def __init__(self, options):
-        self.connection = self.connect(options)
+        self.session = self.connect(options)
 
     def connect(self, options):
         engine = create_engine(options['uri'])
         session = sessionmaker(bind=engine)
-        return session
+        meta = MetaData()
+        meta.reflect(bind=engine)
+        class Tasks:
+            pass
+        setattr(self, 'tasks', mapper(Tasks, meta.tables['task']))
+        return session()
+    
+    
 
