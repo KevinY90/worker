@@ -29,7 +29,7 @@ class DBConnection:
         self.session = self.connect(options)
 
     def connect(self, options):
-        engine = create_engine(options['uri'])
+        engine = create_engine(options['url'])
         session = sessionmaker(bind=engine)
         meta = MetaData()
         meta.reflect(bind=engine)

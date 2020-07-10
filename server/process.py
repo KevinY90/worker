@@ -14,12 +14,12 @@ class Process:
             notifications_handler, 
             available_tasks,
             db_queue,
-            db_uri,
+            db_url,
         ):
         self.task_handler = task_handler
         self.notifications_handler = notifications_handler
         self.available = available_tasks
-        self.db = connection.DBConnection(db_uri)
+        self.db = connection.DBConnection(db_url)
         self.db_update_queue = db_queue
 
     def do_tasks(self):
