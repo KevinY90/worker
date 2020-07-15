@@ -34,7 +34,6 @@ def main(opt):
         }
         env['task_queues'] = [os.environ['task_queues']]
         env['notification_queues'] = [os.environ['notification_queues']]
-        print(env)
     else:
         env = config
 
