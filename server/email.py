@@ -2,7 +2,7 @@ import smtplib
 import ssl
 
 
-class EmailGenerator:
+class Email:
     def __init__(self, options):
         self.configure(options)
 

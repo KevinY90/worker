@@ -3,7 +3,7 @@ import yaml
 import argparse
 from collections import deque
 from server import connection
-from server.email import EmailGenerator
+from server.email import Email
 from server.handler import TaskHandler, NotificationHandler
 from server.process import Process
 from server.tasks import TaskCreator
@@ -44,7 +44,7 @@ def main(opt):
     notification_handler = NotificationHandler(
         env['notification_queues'],
         redis_conn.connection,
-        EmailGenerator(env['email'])
+        Email(env['email'])
     )
 
     task_handler = TaskHandler(
