@@ -27,14 +27,14 @@ class TaskCreator:
                 self.mem[targeted_fields] = parse_fn
         req = Request(
             url_data['url'],
-            url_data['params'], 
+            url_data['params'],
             url_data['headers'],
             )
         rwc = self.run_when_complete()
         self.container.append(PollEndpoint(task_data, req, parse_fn, rwc))
 
     def run_when_complete(self):
-        task_queue = self.queue            
+        task_queue = self.queue
         db_queue = self.db_queue
 
         def process_completed_task(task_data):
@@ -46,13 +46,21 @@ class TaskCreator:
                     'user': task_data['user_obj']['email'],
                     'data': task_data['notify'],
                     'type': task_data['task_obj']['notification_type'],
-                    'task_message': task_data['task_obj']['notification_message'],
+                    'task_message':
+                        task_data['task_obj']['notification_message'],
                 })
                 task_queue.rpush('notifications', notification)
-            if complete == False:
-                if task_data.get('notify'):
-                    del task_data['notify']            
-            db_queue.append((task_data['task_obj']['id'], should_notify, task_queue, task_data, interval))
+            if not complete and task_data.get('notify'):
+                del task_data['notify']
+            db_queue.append(
+                (
+                    task_data['task_obj']['id'],
+                    should_notify,
+                    task_queue,
+                    task_data,
+                    interval
+                )
+            )
         return process_completed_task
 
 
@@ -60,9 +68,10 @@ class Task:
     def __init__(self, task_data, run_when_complete):
         self.task_data = task_data
         self.process_completed_task = run_when_complete
-    
+
     def __del__(self):
         self.process_completed_task(self.task_data)
+
 
 class PollEndpoint(Task):
     def __init__(self, task_data, req, parse_fn, on_complete):
@@ -75,7 +84,7 @@ class PollEndpoint(Task):
             response = json.loads(response.text)
             notifications = self.parse(response)
             self.task_data['notify'] = notifications if notifications else None
-            
+
     def start(self):
         response = self.req.make_get_request()
         self.analyze_response(response)

@@ -10,7 +10,7 @@ from server.tasks import TaskCreator
 
 
 def main(opt):
-    
+
     with open(opt['config']) as config_file:
         config = yaml.safe_load(config_file)
 
@@ -37,13 +37,13 @@ def main(opt):
         print(env)
     else:
         env = config
-    
+
     redis_conn = connection.Redis(env['redis'])
     db_queue = deque()
     tasks_container = deque()
     notification_handler = NotificationHandler(
         env['notification_queues'],
-        redis_conn.connection, 
+        redis_conn.connection,
         EmailGenerator(env['email'])
     )
 
@@ -52,7 +52,7 @@ def main(opt):
         redis_conn.connection,
         TaskCreator(
             tasks_container,
-            redis_conn.connection, 
+            redis_conn.connection,
             db_queue,
         ),
     )

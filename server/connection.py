@@ -7,7 +7,7 @@ from collections import defaultdict
 class Redis:
     def __init__(self, options):
         self.connection = self.create_connection(options)
-    
+
     def create_connection(self, options):
         return redis.Redis(
             host=options['host'],
@@ -19,7 +19,7 @@ class Redis:
 
     def publish_subscribe(self):
         return self.connection.pubsub()
-    
+
     def check_health(self):
         return self.connection.ping()
 
@@ -33,10 +33,9 @@ class DBConnection:
         session = sessionmaker(bind=engine)
         meta = MetaData()
         meta.reflect(bind=engine)
+
         class Tasks:
             pass
+
         setattr(self, 'tasks', mapper(Tasks, meta.tables['task']))
         return session()
-    
-    
-

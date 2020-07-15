@@ -8,9 +8,10 @@ class Handler:
     def __init__(self, names, queue):
         self.names = names
         self.queue = queue
-    
+
     def process_queue(self, handler):
         queue = self.queue
+
         def get_from_queue():
             for job_queue in self.names:
                 job = self.queue.lpop(job_queue)
@@ -25,7 +26,7 @@ class TaskHandler(Handler):
         super().__init__(job_queues, queue)
         self.factory = task_factory
         self.get_tasks = self.process_queue(self.factory.create_task)
-    
+
     def handle_task_queue(self):
         self.get_tasks()
 
@@ -52,19 +53,20 @@ class NotificationHandler(Handler):
         self.email_generator = email_generator
         self.sms_generator = sms_generator
         self.get_notifications = self.process_queue(self.send_notification)
-    
+
     def send_notification(self, data):
         notification = pickle.loads(data)
         if notification['type'] == 'email':
-            message = self.compose_message(notification['data'], notification['task_message'])
+            message = self.compose_message(
+                notification['data'],
+                notification['task_message'],
+            )
             self.email_generator.send_email(message, notification['user'])
 
     def compose_message(self, data, task_msg):
-        message = ['{} {} {}'.format(t,e,v) for t,e,v in data]
+        message = ['{} {} {}'.format(t, e, v) for t, e, v in data]
         message.append(task_msg)
         return '\n'.join(message)
 
     def handle_notification_queue(self):
         self.get_notifications()
-
-

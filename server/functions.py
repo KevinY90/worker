@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 def get_path_to_target_value(path, obj):
     if not path:
         return obj
@@ -11,6 +12,7 @@ def get_path_to_target_value(path, obj):
             if item[key] == target:
                 return get_path_to_target_value(path, item)
     return get_path_to_target_value(path, obj[key])
+
 
 def create_parser(fields):
     fields = fields.split(',')
@@ -32,23 +34,30 @@ def create_parser(fields):
         return results
     return parser
 
+
 def percent(response_val, amount, percent):
     return int(response_val) * int(percent) > int(amount)
+
 
 def less_than(response_val, value):
     return int(response_val) < int(value)
 
+
 def greater_than(response_val, value):
     return int(response_val) > int(value)
+
 
 def equals(response_val, value):
     return response_val == value
 
+
 def did_update(response_val, previous):
     return response_val != previous
 
+
 def notify():
     return True
+
 
 function_map = {
     'percent': percent,
