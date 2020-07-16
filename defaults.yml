@@ -6,11 +6,11 @@ redis:
   password: ""
   socket_timeout: 
 database:
-  uri: ""
+  url: ""
 email:
   worker_email: ""
   password: ""
   smtp_server: ""
   port: 587
-task_queues: []
-notification_queues: []
+task_queues: ["tasks"]
+notification_queues: ["notifications"]
