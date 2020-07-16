@@ -1,16 +1,16 @@
 redis:
-  host: 127.0.0.1
+  host: host.docker.internal
   port: 6379
   db: 0
   expire: 500
   password: ""
-  socket_timeout: 
+  socket_timeout: 500
 database:
-  uri: ""
+  url: 'postgresql://postgres@host.docker.internal:5432/*database_name*'
 email:
   worker_email: ""
-  password: ""
+  password: ''
   smtp_server: ""
   port: 587
-task_queues: []
-notification_queues: []
+task_queues: ['tasks']
+notification_queues: ['notifications']
